@@ -14,7 +14,8 @@ class STLReader
     public static function forFile($fileName)
     {
         $handle = fopen($fileName, 'rb');
-        $type = self::getSTLType($handle);
+        // $type = self::getSTLType($handle);
+        $type = self::getSTLFileType($fileName, $handle);
         $fileReader = ($type == self::TEXT) ? new TextSTLReader($handle) : new BinnarySTLReader($handle);
 
         return $fileReader;
@@ -29,5 +30,14 @@ class STLReader
         rewind($handle);
 
         return $type;
+    }
+
+    private static function getSTLFileType($filename, $handle)
+    {
+        $line = fread($handle, 84);
+        $parts = unpack('a80name/Iint', $line);
+        $totalLen = 84 + $parts['int'] * 50;
+        $size = filesize($filename);
+        return ($totalLen == $size) ? self::BINARY : self::TEXT;
     }
 }
